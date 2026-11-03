@@ -1,44 +1,70 @@
 # kstack
 
-Agent skills and global instructions for Claude Code, Codex, and OpenCode (with [T3 Code](https://t3.codes) support).
-
-Migrated and adapted from [danielphan2003/dstack](https://github.com/danielphan2003/dstack).
+A curated suite of agent skills, workflows, and global instructions designed for **Claude Code**, **Codex**, and **OpenCode**, optimized for use with **[T3 Code](https://t3.codes)** and modern multi-agent workflows.
 
 ---
 
-## Danh sách Skills (`skills/`)
+## 🚀 Danh sách Skills (`skills/`)
 
-Dưới đây là 16 skills đã được chuyển giao vào repo:
+`kstack` cung cấp các bộ kỹ năng chuyên biệt giúp tự động hóa và nâng cao năng lực cho coding agent:
 
-| Skill | Nguồn gốc | Tác dụng |
-| :--- | :--- | :--- |
-| **`babysit-pr`** | tstack (Theo Browne) | Tự động theo dõi PR qua các vòng review (bot AI) và CI; tự sửa lỗi và push cho đến khi sẵn sàng merge. |
-| **`council`** | tstack (Theo Browne) | Triệu tập hội đồng đa mô hình (frontier models) để audit và phản biện code chéo trước khi merge. |
-| **`file-pr`** | tstack (Theo Browne) | Mở PR ngắn gọn, chuẩn chỉnh bằng GitHub CLI (`gh`), tự so sánh diff với nhánh base. |
-| **`full-send`** | tstack (Theo Browne) | Chế độ tự động hóa hoàn toàn từ đầu đến cuối (tự code, test, mở PR, audit và tự động merge). |
-| **`full-stop`** | tstack (Theo Browne) | Tương tự `full-send` nhưng dừng lại ở bước tạo PR xong và chờ người dùng tự bấm merge. |
-| **`leaving-pr-comments`** | tstack (Theo Browne) | Tiêu chuẩn để agent viết nhận xét review trên GitHub PR (gắn kèm callout note minh bạch). |
-| **`modernize`** | tstack (Theo Browne) | Rebase PR cũ lên commit mới nhất của nhánh chính, giải quyết conflict và chạy lại test. |
-| **`sol-loop`** | tstack (Theo Browne) | Vòng lặp cải thiện độ chính xác code bằng cách nhờ model GPT Sol review và fix lỗi lặp lại. |
-| **`takeover`** | tstack (Theo Browne) | Tiếp quản PR hoặc nhánh dở dang từ người khác / agent khác để hoàn thiện mục tiêu. |
-| **`pstack-blast-radius`** | pstack (Lauren Tan) | Phân tích và đo lường rủi ro, dự đoán các module có thể bị ảnh hưởng/hỏng ngầm bởi thay đổi code. |
-| **`pstack-interrogate`** | pstack (Lauren Tan) | Review phản biện đối nghịch (adversarial review) bằng nhiều model để tìm điểm mù và stress test code. |
-| **`pstack-technical-writing`**| pstack (Lauren Tan) | Hướng dẫn viết tài liệu kỹ thuật (RFC, docs, README) súc tích, dễ hiểu. |
-| **`pstack-unslop`** | pstack (Lauren Tan) | Lược bỏ các từ ngữ sáo rỗng, cấu trúc văn phong máy móc của AI để bài viết tự nhiên. |
-| **`effect`** | Local (Daniel Phan) | Cẩm nang hướng dẫn chuyên sâu phát triển ứng dụng TypeScript với Effect v4. |
-| **`lakebed-share`** | Local (Daniel Phan) | Chia sẻ trang HTML/mockup ra ngoài thread an toàn với mã hóa đầu-cuối (E2E) qua Lakebed. |
-| **`wattpad-archiver`** | Local (Daniel Phan) | Công cụ sao lưu thư viện truyện từ Wattpad về máy dưới định dạng EPUB. |
+### 1. Quy trình Git & Tự động hóa PR (Workflows & PR Automation)
+
+| Skill | Mô tả & Tác dụng |
+| :--- | :--- |
+| **`file-pr`** | Mở Pull Request ngắn gọn, chuẩn chỉ qua GitHub CLI (`gh`), tự động so sánh diff với nhánh base và sinh tiêu đề theo Conventional Commits. |
+| **`babysit-pr`** | Tự động theo dõi PR qua các vòng review (đặc biệt là bot review AI) và kiểm tra CI; tự động sửa lỗi và push code cập nhật cho đến khi sẵn sàng merge. |
+| **`full-send`** | Chế độ tự động hóa hoàn toàn end-to-end: agent tự code, chạy test, mở PR, chạy kiểm tra chất lượng và tự động merge khi hoàn tất. |
+| **`full-stop`** | Thực hiện toàn bộ quy trình như `full-send` nhưng dừng lại ở bước PR sẵn sàng để người dùng tự tay review và bấm merge. |
+| **`modernize`** | Rebase và đồng bộ các PR cũ lên phiên bản mới nhất của nhánh chính, tự động giải quyết xung đột (conflict) và chạy lại test. |
+| **`takeover`** | Tiếp quản một PR hoặc nhánh dở dang từ người khác / agent khác để hoàn thiện mục tiêu mà vẫn giữ nguyên credit của người đóng góp ban đầu. |
+| **`leaving-pr-comments`** | Chuẩn hóa định dạng nhận xét do AI viết trên GitHub PR, luôn gắn callout `> [!NOTE]` minh bạch. |
+
+### 2. Đánh giá chất lượng & Phản biện đa mô hình (Review & Auditing)
+
+| Skill | Mô tả & Tác dụng |
+| :--- | :--- |
+| **`council`** | Triệu tập "Hội đồng AI" gồm nhiều frontier models để audit, rà soát chéo code và tìm kiếm các lỗ hổng kiến trúc trước khi merge. |
+| **`pstack-interrogate`** | Đánh giá đối nghịch (adversarial review) bằng sự đa dạng của nhiều model khác nhau để tìm ra các điểm mù và stress test code. |
+| **`pstack-blast-radius`** | Đánh giá "bán kính ảnh hưởng" của một thay đổi code xem có nguy cơ gây lỗi ngầm cho các module khác trong hệ thống hay không. |
+| **`sol-loop`** | Vòng lặp cải thiện độ chính xác của code thông qua việc đối chiếu và sửa lỗi lặp lại trước khi tạo PR. |
+
+### 3. Viết tài liệu & Chuẩn hóa nội dung (Technical Writing)
+
+| Skill | Mô tả & Tác dụng |
+| :--- | :--- |
+| **`pstack-technical-writing`** | Hướng dẫn viết tài liệu kỹ thuật (RFC, README, docs, runbook) theo cấu trúc 4 tầng, dễ hiểu ngay từ lần đọc đầu tiên. |
+| **`pstack-unslop`** | Quét và lược bỏ các từ ngữ sáo rỗng, cấu trúc văn phong máy móc của AI để bài viết tự nhiên và chuẩn văn phong con người. |
+
+### 4. Kỹ thuật chuyên sâu & Tiện ích (Specialized Engineering & Tools)
+
+| Skill | Mô tả & Tác dụng |
+| :--- | :--- |
+| **`effect`** | Hướng dẫn toàn diện và chuẩn mực khi xây dựng ứng dụng TypeScript với kiến trúc Effect v4 (Services, Layers, Schemas, Streams, Caches, Tests). |
+| **`lakebed-share`** | Chia sẻ nhanh trang HTML/mockup ra ngoài thread một cách an toàn với mã hóa đầu-cuối (E2E encryption) qua Lakebed. |
+| **`wattpad-archiver`** | Công cụ sao lưu và xuất thư viện truyện từ Wattpad về máy tính dưới định dạng file EPUB. |
 
 ---
 
-## Hướng dẫn sử dụng
+## 🛠️ Cài đặt & Sử dụng
 
-Tạo symbolic link (symlink) từ thư mục `skills/` vào thư mục cấu hình của agent:
+Để agent có thể nhận diện và sử dụng các skill này, tạo symbolic link (symlink) vào thư mục cấu hình tương ứng của từng công cụ:
 
 ```bash
-# Cho Claude Code
+# Dành cho Claude Code
 ln -s "$PWD/skills/council" ~/.claude/skills/council
 
-# Cho Codex hoặc OpenCode
+# Dành cho Codex hoặc OpenCode
 ln -s "$PWD/skills/council" ~/.agents/skills/council
 ```
+
+Sau khi liên kết, bạn có thể gọi trực tiếp tên skill (ví dụ: `council`, `full-send`) hoặc phím tắt `$` trong T3 Code và các công cụ agent.
+
+---
+
+## 📜 Cấu hình toàn cục (`AGENTS.md`)
+
+File [`AGENTS.md`](AGENTS.md) chứa các nguyên tắc toàn cục về:
+- Phong cách code (TypeScript type safety, Svelte 5 runes, Effect v4).
+- Quy chuẩn commit theo Conventional Commits.
+- Chiến lược điều phối Subagents qua `delegate_task` của T3 Code.
