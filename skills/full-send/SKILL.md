@@ -2,7 +2,7 @@
 name: full-send
 description: Trigger this if the user says 'full send'.
 metadata:
-  harness: [claude, codex, opencode]
+  harness: [claude, codex]
   platform: [linux]
   scope: fleet
   origin: "https://github.com/t3dotgg/tstack (1085050), Theo Browne, MIT"
@@ -51,9 +51,18 @@ one appears.
 1. **Finish the change.** Complete the goal from the user's request with the
    smallest change that works. Fix the case that happened, not every case
    that could. If you are on the default branch, create a branch first.
+   Size the task first with the size table in the "Model routing" section of
+   the global instructions, and follow its plan and implement columns. XS and
+   S stay in this thread.
+   Give each child the plan and the files it needs, and keep the final diff
+   yours to check.
 2. **Prove it.** Get proof for every change you made. See "Proof".
-3. **Get feedback.** Use the `sol-loop` skill to verify changes.
-4. **File the PR** with the `file-pr` skill. Rebase onto the latest default
+3. **Get feedback** at the review level the size table and its risk rule
+   give: none, a light round, a full round, `sol-loop`, or `council`. Say
+   which level you used and why. The reviewer is never the model that wrote
+   the code.
+4. **File the PR** with the `file-pr` skill; the description writer follows
+   "Model routing". Rebase onto the latest default
    branch first. Add one short line to the description that says how you proved
    the change.
 5. **Babysit the PR** with the `babysit-pr` skill. Fix real findings and CI

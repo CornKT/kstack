@@ -1,6 +1,6 @@
 # kstack
 
-A curated suite of agent skills, workflows, and global instructions designed for **Claude Code**, **Codex**, and **OpenCode**, optimized for use with **[T3 Code](https://t3.codes)** and modern multi-agent workflows.
+A curated suite of agent skills, workflows, and global instructions designed for **Claude Code** and **Codex**, optimized for use with **[T3 Code](https://t3.codes)** and modern multi-agent workflows.
 
 ---
 
@@ -41,8 +41,6 @@ A curated suite of agent skills, workflows, and global instructions designed for
 | Skill | Mô tả & Tác dụng |
 | :--- | :--- |
 | **`effect`** | Hướng dẫn toàn diện và chuẩn mực khi xây dựng ứng dụng TypeScript với kiến trúc Effect v4 (Services, Layers, Schemas, Streams, Caches, Tests). |
-| **`lakebed-share`** | Chia sẻ nhanh trang HTML/mockup ra ngoài thread một cách an toàn với mã hóa đầu-cuối (E2E encryption) qua Lakebed. |
-| **`wattpad-archiver`** | Công cụ sao lưu và xuất thư viện truyện từ Wattpad về máy tính dưới định dạng file EPUB. |
 
 ---
 
@@ -54,7 +52,7 @@ A curated suite of agent skills, workflows, and global instructions designed for
 # Dành cho Claude Code
 ln -s "$PWD/skills/council" ~/.claude/skills/council
 
-# Dành cho Codex hoặc OpenCode
+# Dành cho Codex
 ln -s "$PWD/skills/council" ~/.agents/skills/council
 ```
 
