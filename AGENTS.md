@@ -1,8 +1,13 @@
 # Global agent instructions
 
 Shared by every harness: Claude Code imports this file from `~/.claude/CLAUDE.md`,
-Codex reads it as `$CODEX_HOME/AGENTS.md`, and OpenCode lists it in
-`opencode.json` `instructions`. Shared skills live in `~/.agents/skills`.
+and Codex reads it as `$CODEX_HOME/AGENTS.md`. Shared skills live in `~/.agents/skills`.
+
+About the user (Kayti):
+
+- reply in Vietnamese; write code, code comments, commit messages, pull requests, and docs meant for the repository in English unless the repository already uses another language
+- the machine runs Linux on WSL2; the login shell is fish, so when you hand the user a command to paste, write it in fish syntax
+- `pnpm` is the JavaScript package manager; use the project's lockfile manager when a project already uses another one
 
 When working in typescript:
 
@@ -11,36 +16,74 @@ When working in typescript:
 - avoid explicit return types unless absolutely needed
 - `as any` should be an absolute last resort. always use real type safety. lean on type inference instead of manually writing new types over and over again
 
-When working in svelte(kit):
+When showing visuals:
 
-- use modern svelte practices (Svelte 5 runes)
-
-When publishing web apps:
-
-- to show a diagram, table, or mockup inside a T3 thread, use T3's `html_render`
-- to share an HTML page privately outside the thread, load the `lakebed-share` skill; it encrypts locally and the full URL is a secret
-- when the user explicitly authorizes secrets in an encrypted share, secrets may be included only in the self-contained HTML passed to `lakebed-share`; never in an ordinary Lakebed capsule, a commit, logs, or tool output
+- use Markdown for simple tables, lists, and code; use T3's `html_render` for diagrams, charts, and UI mockups inside a T3 thread
 
 When delegating to subagents:
 
 - prefer the T3 Code orchestrator: call `orchestrator_capabilities` first and delegate with `delegate_task`
 - targets below read `<providerInstanceId>/<model> <option>=<value>`; split at the first `/`, and pass the options as `target.options`
-- default child target: `opencode/opencode-go/gpt-6-luna variant=xhigh`; the Codex quota is exhausted until 2026-11-18 03:51, after which use `codex/gpt-6-luna reasoningEffort=xhigh`
-- use `opencode-go/*` models on OpenCode, never `opencode/*` (Zen), which fails with insufficient funds
-- never pick a Gemini model or Claude Fable (this plan cannot run Fable); run Claude children on T3's `claudeAgent` provider only, because other Claude routes bill paid extra usage
+- default child target: `codex/gpt-6.1-terra reasoningEffort=xhigh serviceTier=default`; pick other targets from "Model routing" below
+- never pick a Gemini model, which rules out every `antigravity` model; run Claude children on T3's `claudeAgent` provider
 - use the harness's native subagent tool only when T3 is unavailable; state the reason when you fall back
-- never request `max` effort, and never enable fast mode or a priority service tier, unless the user instructs it; `xhigh` is the ceiling
+- never request `max` or `ultra` effort, and never enable fast mode or the `priority` service tier, unless the user instructs it or "Model routing" names it; `xhigh` is the ceiling for every other model, and pass `serviceTier=default` explicitly because some models default to `priority` and others default to `low` effort
 - check every target above against `orchestrator_capabilities` at call time; if one is missing, report it instead of guessing another
 
-When using tstack skills (`council`, `sol-loop`, `full-send`, and the rest):
+Model routing:
 
-- the council, and the `pstack-interrogate` reviewers, are `claudeAgent/claude-opus-5-5 effort=xhigh`, `opencode/opencode-go/mimo-v2.6-pro`, and `opencode/opencode-go/glm-5.3-flash`; only frontier-class models sit on it, so never seat GPT-6 Luna or another budget model
+Size the task before you start, and state the size and review level in your first update:
+
+| Size | Typical work | Plan | Implement | Proof | Review |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| XS | a typo, copy text, one color or spacing value, a config value, a version bump, a rename the tools can check | none | main thread | the one check that shows it: render it, run it, or grep it | none |
+| S | a CSS or layout fix, hover and focus states, a one-function bug with a repro, a new test, docs | none | main thread | reproduce, fix, and watch it pass; for UI, look at it in the browser; run the repo's lint and typecheck | none when the proof covers the whole diff, otherwise a light round |
+| M | a fix or feature with real logic across a few files, a new component or endpoint, a refactor inside one module | a plan child only when the request leaves the approach open | main thread under about 150 changed lines, otherwise the implement job | the repo's CI checks plus one focused test for the new behavior | a full round |
+| L | a feature across modules, a public API change, a data model change | the plan job | the implement job; hard parts on the hard-part job | CI, tests, and a run of the app | `sol-loop` |
+
+Risk raises the review whatever the size. A change that touches auth or permissions, payments, secrets, data migration or deletion, concurrency, deploy or infra config, or a hot performance path gets `sol-loop` and the hard-part job; an L change of that kind also gets `council`.
+
+Review levels:
+
+- none: the proof shows every changed line working, the diff has no branching logic, or it is a revert, generated output, or formatting only
+- light round: one review at `reasoningEffort=high` and no second round; fix any blocker yourself and prove the fix without another review
+- full round: one review at `reasoningEffort=xhigh`; continue as `sol-loop` only when it finds a blocker
+- `sol-loop`: the skill's own budget, 3 rounds, or 5 for risky work
+- the reviewer is never the model that wrote the code; when the main thread runs Sol, review on `claudeAgent/claude-opus-5-5` at the same effort
+
+Keep the overhead smaller than the task:
+
+- a child takes minutes to brief and start, so delegate a job only when it saves more than that: explore only when you would read more than about ten files, and the fix loop only when failures are many or slow
+- for XS, S, and M, the main thread writes the PR description itself; for XS and S it does all the other jobs too, and its own model is enough, so a Terra thread suits this work
+- time budgets: XS 5 minutes, S 15, M 40, L none; time spent waiting on CI, a human, or a secret does not count; at twice the budget, size the task again, then move it up with a reason or report what blocks it
+- when the work turns out bigger or riskier than its size, move it up and say so; never move it down to save time
+
+Pick each child by the job it does. Every row has a primary and a fallback on another provider, so one provider's outage or quota never stops the job. Codex targets all take `serviceTier=default`.
+
+| Job | Primary | Fallback |
+| :--- | :--- | :--- |
+| Plan: read the request, choose the approach, split the work, mark hard parts | `claudeAgent/claude-opus-5-5 effort=xhigh` | `codex/gpt-6.1-sol reasoningEffort=xhigh` |
+| Explore: find and read the relevant code, summarize logs or diffs | `codex/gpt-6-luna reasoningEffort=max` | `claudeAgent/claude-sonnet-5-5 effort=medium` |
+| Implement a planned change | `codex/gpt-6.1-terra reasoningEffort=xhigh` | `claudeAgent/claude-sonnet-5-5 effort=high` |
+| Implement a part the plan marks hard (algorithms, concurrency, migrations, security) | `codex/gpt-6.1-sol reasoningEffort=high` | `claudeAgent/claude-opus-5-5 effort=high` |
+| Fix loop: run tests, lint, and typecheck, and fix what fails | `codex/gpt-6-luna reasoningEffort=max` | `claudeAgent/claude-sonnet-5-5 effort=medium` |
+| Review | `codex/gpt-6.1-sol reasoningEffort=xhigh` | `claudeAgent/claude-opus-5-5 effort=xhigh` |
+| Write the PR description and docs | `claudeAgent/claude-sonnet-5-5 effort=medium` | `codex/gpt-6.1-terra reasoningEffort=xhigh` |
+
+- switch to the fallback only on an infrastructure failure: the model is missing from `orchestrator_capabilities`, quota or rate limit, or the task crashes; switch once per job, and when the fallback fails too, stop and report both errors
+- a weak result is not a reason to switch; tests and review catch it
+- the reviewer must never be the model that wrote the code; Sol reviewing Terra or Luna is fine because it is the stronger model, but when Sol or Opus wrote a hard part, review that part on the other one
+- name every fallback in the report, with the job and the error, e.g. "implement: Terra rate-limited, ran on Sonnet"
+
+When using kstack skills (`council`, `sol-loop`, `full-send`, and the rest):
+
+- the council, and the `pstack-interrogate` reviewers, are `claudeAgent/claude-opus-5-5 effort=xhigh` and `codex/gpt-6.1-sol reasoningEffort=xhigh serviceTier=default`; only frontier-class models sit on it, so never seat GPT Luna or another budget model
 - never add a Gemini model to the council, not even as a jester
-- this account's plan has no GPT Sol, so `sol-loop` reports that blocker; in `full-send`, run `council` where it says `sol-loop`
+- `sol-loop` runs on `codex/gpt-6.1-sol reasoningEffort=xhigh serviceTier=default`; the size table decides whether a task needs it at all
 
 When running shell commands:
 
-- these are Daniel's preferences: `rg` over `grep` and `fd` over `find`; where a newer replacement for a classic tool is installed (check with `command -v`), use it, and fall back to the classic tool when it is not
+- prefer `rg` over `grep` and `fd` over `find`; where a newer replacement for a classic tool is installed (check with `command -v`), use it, and fall back to the classic tool when it is not
 - keep scripts committed to a repository on tools every machine has
 
 In general:
@@ -49,19 +92,17 @@ In general:
 
 When a task needs root:
 
-- where `sudo` is passwordless for your account, use it for the task at hand without asking
-- on an interactive desktop, use `sudo` only through its visible authorization prompt, and say what each command is for
+- `sudo` asks for a password on this machine; tell the user the exact command and what it is for, and let them run it
 - never feed a password to `sudo` or `run0`, including one from a secret store, and never bypass the prompt
 
 When you need temporary files:
 
-- keep them in your harness's scratch space: Claude Code's session scratchpad, or your own subdirectory of `/tmp/opencode` in OpenCode; never loose in `/tmp`
+- keep them in your harness's scratch space, such as Claude Code's session scratchpad; never loose in `/tmp`
 - delete what you created before handing back, unless the user needs it; then say where it is
 - files there untouched for 3 days are deleted automatically, so never keep anything there that must last
 
 When committing:
 
-- commit unsigned, and never trigger a signing prompt; Daniel's signing key is a YubiKey that needs a touch for every signature
-- in a repository with a GitHub remote, work on a branch and land it through a pull request; Daniel's squash merge on GitHub produces a GitHub-signed commit on the default branch
+- in a repository with a GitHub remote, work on a branch and land it through a pull request with a squash merge
 - write every commit message and pull request title as a Conventional Commit (`type(scope): summary`, e.g. `feat(services): …`, `fix(ci): …`, `docs: …`); the squash merge uses the PR title as the commit on the default branch
 - check the current branch before committing, and never commit or push to the default branch
