@@ -1,12 +1,12 @@
 ---
 name: pstack-interrogate
-description: 'Use when the user says "interrogate", or asks for an adversarial or multi-model review, to challenge or stress test a change, or to find blind spots.'
+description: 'Use when the user explicitly invokes `/pstack-interrogate` or `$pstack-interrogate` for an adversarial multi-model review.'
 metadata:
   harness: [claude, codex]
   platform: [linux]
   scope: fleet
   origin: "https://github.com/chhoumann/t3-pstack (238d156), Lauren Tan's pstack, MIT"
-  requires: "T3 Code delegation; council members in ~/.agents/AGENTS.md"
+  requires: "T3 Code delegation; review roster from the active global instructions"
 ---
 
 # Interrogate
@@ -29,13 +29,21 @@ Before spawning reviewers, state the intent in one clear paragraph from the user
 
 ## Step 3, Spawn Reviewers
 
-Launch all reviewers in a single response with `delegate_task`, one per council member listed in `~/.agents/AGENTS.md`, labeled Reviewer A, B, and so on to match the member count. If no council is listed, report that instead of choosing models.
+Call `orchestrator_capabilities` first in T3 Code. Launch all reviewers in a
+single response with `delegate_task`, one per model in the review roster from
+the active global instructions, labeled Reviewer A, B, and so on to match the
+roster. Do not assign a model to review the files or parts it wrote. If no
+roster or eligible reviewer is available, report that instead of choosing
+models.
 
-Each reviewer gets `role: "review"`, a brief that says to inspect only and change no file, and `target` set from its council entry.
+Each reviewer gets `role: "review"`, a brief that says to inspect only and
+change no file, and `target` set from its roster entry.
 
-If `delegate_task` rejects a council entry, run that reviewer on another target of the same family from `orchestrator_capabilities` and say so. A model's family is the first segment of its ID's last `/` part, such as `claude`, `gpt`, or `mimo`, whatever provider instance serves it. With no family match, report the missing reviewer instead of substituting another family.
+If a roster entry is unavailable, continue with the remaining eligible members
+and name the gap. With none left, stop and report. Do not lower the model tier,
+seat a duplicate roster member, or silently change provider.
 
-Read `references/reviewer-prompt.md` and fill in the same template for every reviewer with the stated intent, the diff or file contents, the rubric from `references/rubric.md`, and the code-quality lens from `references/code-quality-review.md`. Use each council entry's reasoning level as written; never raise it to `max` or enable fast mode.
+Read `references/reviewer-prompt.md` and fill in the same template for every reviewer with the stated intent, the diff or file contents, the rubric from `references/rubric.md`, and the code-quality lens from `references/code-quality-review.md`. Use each roster entry's reasoning level as written; never raise it to `max` or enable fast mode.
 
 ## Step 4, Synthesize
 

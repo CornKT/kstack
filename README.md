@@ -1,68 +1,133 @@
 # kstack
 
-A curated suite of agent skills, workflows, and global instructions designed for **Claude Code** and **Codex**, optimized for use with **[T3 Code](https://t3.codes)** and modern multi-agent workflows.
+`kstack` is a collection of agent skills and shared instructions for Claude
+Code and Codex. It focuses on controlled implementation, review, documentation,
+and pull request workflows.
 
----
+## Default and explicit modes
 
-## 🚀 Danh sách Skills (`skills/`)
+Without an orchestration command, the main model handles the request on its
+own. It does not run formal task sizing, delegate child work, or start a
+multi-model review.
 
-`kstack` cung cấp các bộ kỹ năng chuyên biệt giúp tự động hóa và nâng cao năng lực cho coding agent:
+Use an explicit command when you want orchestration:
 
-### 1. Quy trình Git & Tự động hóa PR (Workflows & PR Automation)
+| Command | Purpose |
+| --- | --- |
+| `/council` | Run a council review with the eligible configured reviewers. |
+| `/sol-loop` | Run a bounded review and fix loop. |
+| `/pstack-interrogate` | Run an adversarial multi-model review without auto-applying fixes. |
+| `/pstack-blast-radius` | Check what a change could break outside its direct callers. |
+| `/full-send` | Implement, prove, open, monitor, and merge a PR. |
+| `/full-stop` | Implement, prove, open, and monitor a PR without merging it. |
 
-| Skill | Mô tả & Tác dụng |
-| :--- | :--- |
-| **`file-pr`** | Mở Pull Request ngắn gọn, chuẩn chỉ qua GitHub CLI (`gh`), tự động so sánh diff với nhánh base và sinh tiêu đề theo Conventional Commits. |
-| **`babysit-pr`** | Tự động theo dõi PR qua các vòng review (đặc biệt là bot review AI) và kiểm tra CI; tự động sửa lỗi và push code cập nhật cho đến khi sẵn sàng merge. |
-| **`full-send`** | Chế độ tự động hóa hoàn toàn end-to-end: agent tự code, chạy test, mở PR, chạy kiểm tra chất lượng và tự động merge khi hoàn tất. |
-| **`full-stop`** | Thực hiện toàn bộ quy trình như `full-send` nhưng dừng lại ở bước PR sẵn sàng để người dùng tự tay review và bấm merge. |
-| **`modernize`** | Rebase và đồng bộ các PR cũ lên phiên bản mới nhất của nhánh chính, tự động giải quyết xung đột (conflict) và chạy lại test. |
-| **`takeover`** | Tiếp quản một PR hoặc nhánh dở dang từ người khác / agent khác để hoàn thiện mục tiêu mà vẫn giữ nguyên credit của người đóng góp ban đầu. |
-| **`leaving-pr-comments`** | Chuẩn hóa định dạng nhận xét do AI viết trên GitHub PR, luôn gắn callout `> [!NOTE]` minh bạch. |
+T3 Code also accepts the skill form, such as `$council` and `$full-stop`. The
+command selects the workflow. For `full-send` and `full-stop`, task size sets
+the review depth. For review commands, the command fixes the review mode and
+task size sets its scope and budget. A command does not silently switch to
+another workflow.
 
-### 2. Đánh giá chất lượng & Phản biện đa mô hình (Review & Auditing)
+Proof requirements, branch protection, and the rule against staging unrelated
+changes apply in both modes. In default mode, the main model also runs the
+relevant checks and reports risky changes. It suggests an explicit review
+command without starting one.
 
-| Skill | Mô tả & Tác dụng |
-| :--- | :--- |
-| **`council`** | Triệu tập "Hội đồng AI" gồm nhiều frontier models để audit, rà soát chéo code và tìm kiếm các lỗ hổng kiến trúc trước khi merge. |
-| **`pstack-interrogate`** | Đánh giá đối nghịch (adversarial review) bằng sự đa dạng của nhiều model khác nhau để tìm ra các điểm mù và stress test code. |
-| **`pstack-blast-radius`** | Đánh giá "bán kính ảnh hưởng" của một thay đổi code xem có nguy cơ gây lỗi ngầm cho các module khác trong hệ thống hay không. |
-| **`sol-loop`** | Vòng lặp cải thiện độ chính xác của code thông qua việc đối chiếu và sửa lỗi lặp lại trước khi tạo PR. |
+## Skills
 
-### 3. Viết tài liệu & Chuẩn hóa nội dung (Technical Writing)
+### Pull request workflows
 
-| Skill | Mô tả & Tác dụng |
-| :--- | :--- |
-| **`pstack-technical-writing`** | Hướng dẫn viết tài liệu kỹ thuật (RFC, README, docs, runbook) theo cấu trúc 4 tầng, dễ hiểu ngay từ lần đọc đầu tiên. |
-| **`pstack-unslop`** | Quét và lược bỏ các từ ngữ sáo rỗng, cấu trúc văn phong máy móc của AI để bài viết tự nhiên và chuẩn văn phong con người. |
+| Skill | Purpose |
+| --- | --- |
+| [`file-pr`](skills/file-pr) | Open a concise pull request with a checked diff and a clear description. |
+| [`babysit-pr`](skills/babysit-pr) | Monitor checks, reviews, conflicts, and follow-up changes for one PR. |
+| [`full-send`](skills/full-send) | Take an explicit request through implementation, proof, review, monitoring, and merge. |
+| [`full-stop`](skills/full-stop) | Take an explicit request to a merge-ready PR without merging it. |
+| [`modernize`](skills/modernize) | Reassess and update an aging PR against its current base branch. |
+| [`takeover`](skills/takeover) | Continue existing work while preserving contributor credit and intent. |
+| [`leaving-pr-comments`](skills/leaving-pr-comments) | Format and verify agent-authored GitHub PR comments. |
 
-### 4. Kỹ thuật chuyên sâu & Tiện ích (Specialized Engineering & Tools)
+Invoke these workflows when you want their side effects. They run only after
+you invoke them. A watcher may remain active after `babysit-pr` or `full-send`
+starts.
 
-| Skill | Mô tả & Tác dụng |
-| :--- | :--- |
-| **`effect`** | Hướng dẫn toàn diện và chuẩn mực khi xây dựng ứng dụng TypeScript với kiến trúc Effect v4 (Services, Layers, Schemas, Streams, Caches, Tests). |
+### Review and auditing
 
----
+| Skill | Purpose |
+| --- | --- |
+| [`council`](skills/council) | Ask the eligible configured reviewers to compare findings. A council can run with one member when the other wrote the affected code or is unavailable. |
+| [`sol-loop`](skills/sol-loop) | Run one configured frontier reviewer through a bounded fix loop. |
+| [`pstack-interrogate`](skills/pstack-interrogate) | Run an explicit adversarial multi-model review without auto-applying fixes. |
+| [`pstack-blast-radius`](skills/pstack-blast-radius) | Prove what a change could break outside its direct callers. |
 
-## 🛠️ Cài đặt & Sử dụng
+Use `/council`, `/sol-loop`, `/pstack-interrogate`, or
+`/pstack-blast-radius` when you want these review workflows. A normal request
+to fix code stays in the main thread.
 
-Để agent có thể nhận diện và sử dụng các skill này, tạo symbolic link (symlink) vào thư mục cấu hình tương ứng của từng công cụ:
+### Documentation and writing
 
-```bash
-# Dành cho Claude Code
-ln -s "$PWD/skills/council" ~/.claude/skills/council
+| Skill | Purpose |
+| --- | --- |
+| [`pstack-technical-writing`](skills/pstack-technical-writing) | Write or review README files, RFCs, runbooks, and other technical docs. |
+| [`pstack-unslop`](skills/pstack-unslop) | Remove filler, AI wording, and unclear prose before publishing. |
 
-# Dành cho Codex
-ln -s "$PWD/skills/council" ~/.agents/skills/council
+Technical writing applies `pstack-unslop` to every document it edits.
+
+### Effect v4
+
+| Skill | Purpose |
+| --- | --- |
+| [`effect`](skills/effect) | Guide Effect v4 services, layers, schemas, configuration, schedules, caches, streams, HTTP clients, and tests. |
+
+Effect is selected for Effect v4 work. It does not start a child model by
+itself.
+
+## Install the skills
+
+Run this fish script from the repository root. It links every skill into the
+Claude Code and Codex skill directories and can be run again safely.
+
+```fish
+function __kstack_install
+    set -l repo (pwd)
+    if not test -d $repo/skills
+        echo "Run this script from the kstack repository root." >&2
+        return 1
+    end
+    mkdir -p ~/.claude/skills ~/.agents/skills
+
+    for skill in $repo/skills/*
+        test -d $skill; or continue
+        set -l name (basename $skill)
+        for target in ~/.claude/skills ~/.agents/skills
+            set -l link $target/$name
+            if test -e $link; and not test -L $link
+                echo "Refusing to replace existing directory or file: $link" >&2
+                return 1
+            end
+            ln -sfn $skill $link
+        end
+    end
+end
+__kstack_install
+functions -e __kstack_install
 ```
 
-Sau khi liên kết, bạn có thể gọi trực tiếp tên skill (ví dụ: `council`, `full-send`) hoặc phím tắt `$` trong T3 Code và các công cụ agent.
+The shared instructions live in [`AGENTS.md`](AGENTS.md). Codex reads it from
+`$CODEX_HOME/AGENTS.md`. If `CODEX_HOME` is unset, use `~/.codex/AGENTS.md`.
+Claude Code should include the same file from its `CLAUDE.md` configuration:
 
----
+```text
+@/path/to/kstack/AGENTS.md
+```
 
-## 📜 Cấu hình toàn cục (`AGENTS.md`)
+## Repository checks
 
-File [`AGENTS.md`](AGENTS.md) chứa các nguyên tắc toàn cục về:
-- Phong cách code (TypeScript type safety, Svelte 5 runes, Effect v4).
-- Quy chuẩn commit theo Conventional Commits.
-- Chiến lược điều phối Subagents qua `delegate_task` của T3 Code.
+This repository does not yet ship a validation script or CI workflow. Before
+committing documentation or workflow changes, run `git diff --check`, validate
+the changed Markdown links, and parse the Python watcher without writing
+bytecode:
+
+```fish
+git diff --check
+python3 -c 'import ast, sys; ast.parse(open(sys.argv[1]).read(), sys.argv[1])' skills/babysit-pr/scripts/pr-wait
+```

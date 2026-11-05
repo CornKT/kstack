@@ -32,7 +32,17 @@ When delegating to subagents:
 
 Model routing:
 
-Size the task before you start, and state the size and review level in your first update:
+Default mode uses the main model only. Do not run formal task sizing, delegate
+child work, multi-model review, or automatic escalation unless the user invokes
+an orchestration command or explicitly asks for delegation. An explicit request
+for delegation also runs the size table before choosing a child.
+
+Orchestration commands include `/council`, `/sol-loop`, `/pstack-interrogate`,
+`/pstack-blast-radius`, `/full-send`, and `/full-stop`. When one is explicit,
+run the size table below to choose its budget, children, proof, and review
+depth. For `full-send` and `full-stop`, size selects the review depth. For the
+review commands, the command selects the review mode and size only tunes its
+scope and budget.
 
 | Size | Typical work | Plan | Implement | Proof | Review |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -41,14 +51,25 @@ Size the task before you start, and state the size and review level in your firs
 | M | a fix or feature with real logic across a few files, a new component or endpoint, a refactor inside one module | a plan child only when the request leaves the approach open | main thread under about 150 changed lines, otherwise the implement job | the repo's CI checks plus one focused test for the new behavior | a full round |
 | L | a feature across modules, a public API change, a data model change | the plan job | the implement job; hard parts on the hard-part job | CI, tests, and a run of the app | `sol-loop` |
 
-Risk raises the review whatever the size. A change that touches auth or permissions, payments, secrets, data migration or deletion, concurrency, deploy or infra config, or a hot performance path gets `sol-loop` and the hard-part job; an L change of that kind also gets `council`.
+A change is risky when it touches auth or permissions, payments, secrets, data
+migration or deletion, concurrency, deploy or infra config, or a hot performance
+path. In default mode, the main model still runs the relevant proof and checks,
+states the risk, and suggests an explicit review command without starting one.
+When `full-send` or `full-stop` is active, risk overrides the default review:
+XS and S risky changes use a full round. M risky changes use `sol-loop`. L
+risky changes use `council` instead of `sol-loop`. Review commands keep the
+requested review mode and do not switch commands because of size. Use the
+hard-part job only when the plan marks an algorithm, concurrency, migration, or
+security part as hard. Do not run both `sol-loop` and `council` for the same
+diff unless the user asks.
 
 Review levels:
 
 - none: the proof shows every changed line working, the diff has no branching logic, or it is a revert, generated output, or formatting only
 - light round: one review at `reasoningEffort=high` and no second round; fix any blocker yourself and prove the fix without another review
 - full round: one review at `reasoningEffort=xhigh`; continue as `sol-loop` only when it finds a blocker
-- `sol-loop`: the skill's own budget, 3 rounds, or 5 for risky work
+- `sol-loop`: the skill's own budget, 3 rounds, or 5 for the risky categories defined above
+- `council`: the skill's budget, one full round plus one targeted recheck, and a third round for risky work with an open blocker
 - the reviewer is never the model that wrote the code; when the main thread runs Sol, review on `claudeAgent/claude-opus-5-5` at the same effort
 
 Keep the overhead smaller than the task:
@@ -77,9 +98,9 @@ Pick each child by the job it does. Every row has a primary and a fallback on an
 
 When using kstack skills (`council`, `sol-loop`, `full-send`, and the rest):
 
-- the council, and the `pstack-interrogate` reviewers, are `claudeAgent/claude-opus-5-5 effort=xhigh` and `codex/gpt-6.1-sol reasoningEffort=xhigh serviceTier=default`; only frontier-class models sit on it, so never seat GPT Luna or another budget model
+- the review roster for `council` and `pstack-interrogate` is `claudeAgent/claude-opus-5-5 effort=xhigh` and `codex/gpt-6.1-sol reasoningEffort=xhigh serviceTier=default`; only frontier-class models sit on it, so never seat GPT Luna or another budget model. Exclude each model from the files or parts it wrote.
 - never add a Gemini model to the council, not even as a jester
-- `sol-loop` runs on `codex/gpt-6.1-sol reasoningEffort=xhigh serviceTier=default`; the size table decides whether a task needs it at all
+- `sol-loop` runs on `codex/gpt-6.1-sol reasoningEffort=xhigh serviceTier=default`, or the configured non-writer frontier reviewer when Sol wrote the scoped part; the size table decides whether a task needs it at all
 
 When running shell commands:
 
@@ -103,6 +124,7 @@ When you need temporary files:
 
 When committing:
 
+- run `git status --short` first; never stage or commit unrelated changes
 - in a repository with a GitHub remote, work on a branch and land it through a pull request with a squash merge
 - write every commit message and pull request title as a Conventional Commit (`type(scope): summary`, e.g. `feat(services): …`, `fix(ci): …`, `docs: …`); the squash merge uses the PR title as the commit on the default branch
 - check the current branch before committing, and never commit or push to the default branch
