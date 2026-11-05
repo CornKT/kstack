@@ -1,6 +1,6 @@
 ---
 name: full-send
-description: Trigger this if the user says 'full send'.
+description: Use when the user explicitly invokes `/full-send` or `$full-send` to take work through a merged PR.
 metadata:
   harness: [claude, codex]
   platform: [linux]
@@ -51,6 +51,12 @@ one appears.
 1. **Finish the change.** Complete the goal from the user's request with the
    smallest change that works. Fix the case that happened, not every case
    that could. If you are on the default branch, create a branch first.
+   Run `git status --short` before editing. Never stage or commit unrelated
+   changes. If unrelated changes overlap files you must edit, ask through
+   "Asking the user". Run delegated implementation in a separate worktree with
+   `isolation: "worktree"` only when unrelated changes or parallel edits require
+   it. Otherwise use the shared checkout and integrate the child's commits
+   before proof and review.
    Size the task first with the size table in the "Model routing" section of
    the global instructions, and follow its plan and implement columns. XS and
    S stay in this thread.
@@ -102,6 +108,12 @@ Full confidence means all of these are true on the latest commit:
 - Required checks are green.
 - Review bots have finished, and each finding is fixed or dismissed with a
   written reason.
+- The required review level covers the final behavior diff. Before merge, run
+  one targeted recheck at the same level over all behavior changes since the
+  last review, including rebase conflict fixes and babysitting fixes. A light
+  or full round's own should/nit fixes, proved without a second reviewer, count
+  as covered. This single merge-gate recheck runs outside the review skill's
+  round budget. A blocker from it goes through "Asking the user".
 - No human review still requests changes.
 - The branch is up to date with the default branch, and GitHub reports it as
   mergeable.
@@ -110,7 +122,8 @@ Merge with the method the repo uses. Check the allowed methods and recent merged
 PRs. If the repo uses a merge queue or auto-merge, stay until GitHub reports the
 PR as merged. Merge through branch protection as configured. Never use `--admin`
 or other bypasses. You can ignore automated reviews that request "needs human
-review" if you have high confidence in your changes.
+review" only when the task is not in the risk categories from the global
+instructions and the repository does not require that approval.
 
 ## Asking the user
 
