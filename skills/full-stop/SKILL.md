@@ -1,12 +1,12 @@
 ---
 name: full-stop
-description: Use when the user explicitly invokes "/full-stop" or "$full-stop" to prepare a merge-ready PR without merging.
+description: Trigger this if the user says 'full stop', even as a closing "Full stop." that reads like emphasis.
 metadata:
   harness: [claude, codex]
   platform: [linux]
   scope: fleet
   origin: "https://github.com/t3dotgg/tstack (1085050), Theo Browne, MIT"
-  requires: "T3 Code's orchestrator (delegate_task)"
+  requires: "none"
 ---
 
 # Full Stop
