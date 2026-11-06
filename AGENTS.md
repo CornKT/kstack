@@ -23,16 +23,16 @@ When showing visuals:
 When delegating to subagents:
 
 - prefer the T3 Code orchestrator: call `orchestrator_capabilities` first and delegate with `delegate_task`
-- targets below read `<providerInstanceId>/<model> <option>=<value>`; split at the first `/`, and pass the options as `target.options`
+- targets read `<providerInstanceId>/<model> <option>=<value>`; split at the first `/`, and pass the options as `target.options`
 - default child target: omit `target`, so the child runs on the parent thread's own provider and model; choose another only when the user names one or a skill says to
 - never pick a Gemini model, which rules out every `antigravity` model; run Claude children on T3's `claudeAgent` provider
 - use the harness's native subagent tool only when T3 is unavailable; state the reason when you fall back
 - never request `max` or `ultra` effort, and never enable fast mode or the `priority` service tier, unless the user instructs it; `xhigh` is the ceiling, and pass `serviceTier=default` explicitly because some models default to `priority` and others default to `low` effort
-- check every target above against `orchestrator_capabilities` at call time; if one is missing, report it instead of guessing another
+- check every target against `orchestrator_capabilities` at call time; if one is missing, report it instead of guessing another
 
 When using kstack skills (`council`, `sol-loop`, `full-send`, and the rest):
 
-- the council, and the `pstack-interrogate` reviewers, are the latest Claude Opus and the latest GPT Sol, each at `xhigh`; resolve the newest version from `orchestrator_capabilities` at call time and never pin one; only frontier-class models sit on it, so never seat GPT Luna or another budget model
+- the council, and the `pstack-interrogate` reviewers, are two members, which replaces the council skill's three-provider default: the latest Claude Opus and the latest GPT Sol, each at `xhigh`; resolve the newest version from `orchestrator_capabilities` at call time and never pin one; only frontier-class models sit on it, so never seat GPT Luna or another budget model
 - never add a Gemini model to the council, not even as a jester
 - `sol-loop` reviews with the latest GPT Sol at `xhigh`, and `full-send` calls it as written; if `orchestrator_capabilities` lacks Sol, `sol-loop` reports the blocker, and in `full-send`, run `council` where it says `sol-loop`
 

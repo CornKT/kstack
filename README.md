@@ -13,7 +13,7 @@ Use an explicit command when you want orchestration:
 
 | Command | Purpose |
 | --- | --- |
-| `/council` | Run a council review with the eligible configured reviewers. |
+| `/council` | Run a council review with the configured council members. |
 | `/sol-loop` | Run a bounded review and fix loop. |
 | `/pstack-interrogate` | Run an adversarial multi-model review without auto-applying fixes. |
 | `/pstack-blast-radius` | Check what a change could break outside its direct callers. |
