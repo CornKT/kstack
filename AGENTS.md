@@ -32,7 +32,7 @@ When delegating to subagents:
 
 When using kstack skills (`council`, `sol-loop`, `full-send`, and the rest):
 
-- the council, and the `pstack-interrogate` reviewers, are two members, which replaces the council skill's three-provider default: the latest Claude Opus and the latest GPT Sol, each at `xhigh`; resolve the newest version from `orchestrator_capabilities` at call time and never pin one; only frontier-class models sit on it, so never seat GPT Luna or another budget model
+- the council, and the `pstack-interrogate` reviewers, have two members, replacing the council skill's three-provider default: the latest Claude Opus and the latest GPT Sol, each at `xhigh`; resolve the newest version from `orchestrator_capabilities` at call time and never pin one; only frontier-class models sit on it, so never seat GPT Luna or another budget model
 - never add a Gemini model to the council, not even as a jester
 - `sol-loop` reviews with the latest GPT Sol at `xhigh`, and `full-send` calls it as written; if `orchestrator_capabilities` lacks Sol, `sol-loop` reports the blocker, and in `full-send`, run `council` where it says `sol-loop`
 
