@@ -7,30 +7,26 @@ and pull request workflows.
 ## Default and explicit modes
 
 Without an orchestration command, the main model handles the request on its
-own. It does not run formal task sizing, delegate child work, or start a
-multi-model review.
+own. It does not delegate child work or start a multi-model review.
 
 Use an explicit command when you want orchestration:
 
 | Command | Purpose |
 | --- | --- |
-| `/council` | Run a council review with the eligible configured reviewers. |
+| `/council` | Run a council review with the configured council members. |
 | `/sol-loop` | Run a bounded review and fix loop. |
 | `/pstack-interrogate` | Run an adversarial multi-model review without auto-applying fixes. |
 | `/pstack-blast-radius` | Check what a change could break outside its direct callers. |
 | `/full-send` | Implement, prove, open, monitor, and merge a PR. |
 | `/full-stop` | Implement, prove, open, and monitor a PR without merging it. |
 
-T3 Code also accepts the skill form, such as `$council` and `$full-stop`. The
-command selects the workflow. For `full-send` and `full-stop`, task size sets
-the review depth. For review commands, the command fixes the review mode and
-task size sets its scope and budget. A command does not silently switch to
-another workflow.
+T3 Code also accepts the skill form, such as `$council` and `$full-stop`, and
+saying the name works too, such as "council" or "full stop". The command
+selects the workflow. A command does not silently switch to another
+workflow.
 
 Proof requirements, branch protection, and the rule against staging unrelated
-changes apply in both modes. In default mode, the main model also runs the
-relevant checks and reports risky changes. It suggests an explicit review
-command without starting one.
+changes apply in both modes.
 
 ## Skills
 
@@ -54,8 +50,8 @@ starts.
 
 | Skill | Purpose |
 | --- | --- |
-| [`council`](skills/council) | Ask the eligible configured reviewers to compare findings. A council can run with one member when the other wrote the affected code or is unavailable. |
-| [`sol-loop`](skills/sol-loop) | Run one configured frontier reviewer through a bounded fix loop. |
+| [`council`](skills/council) | Ask the configured council members to review and compare findings. |
+| [`sol-loop`](skills/sol-loop) | Run the latest GPT Sol through a bounded review and fix loop. |
 | [`pstack-interrogate`](skills/pstack-interrogate) | Run an explicit adversarial multi-model review without auto-applying fixes. |
 | [`pstack-blast-radius`](skills/pstack-blast-radius) | Prove what a change could break outside its direct callers. |
 
